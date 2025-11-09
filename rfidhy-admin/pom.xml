@@ -54,6 +54,11 @@
             <artifactId>rfidhy-generator</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>com.rfidhy</groupId>
+            <artifactId>rfidhy-base</artifactId>
+        </dependency>
+
     </dependencies>
 
     <build>

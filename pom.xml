@@ -185,6 +185,13 @@
                 <version>${rfidhy.version}</version>
             </dependency>
 
+            <!-- 线索来源-->
+            <dependency>
+                <groupId>com.rfidhy</groupId>
+                <artifactId>rfidhy-base</artifactId>
+                <version>${rfidhy.version}</version>
+            </dependency>
+
         </dependencies>
     </dependencyManagement>
 
@@ -195,6 +202,7 @@
         <module>rfidhy-quartz</module>
         <module>rfidhy-generator</module>
         <module>rfidhy-common</module>
+        <module>rfidhy-base</module>
     </modules>
     <packaging>pom</packaging>
 
