@@ -78,12 +78,30 @@
       </el-col>
       <el-col :span="1.5">
         <el-button
+          type="info"
+          plain
+          icon="Upload"
+          @click="handleImport"
+          v-hasPermi="['base:source:import']"
+        >导入</el-button>
+      </el-col>
+      <el-col :span="1.5">
+        <el-button
           type="warning"
           plain
           icon="Download"
           @click="handleExport"
           v-hasPermi="['base:source:export']"
         >导出</el-button>
+      </el-col>
+      <el-col :span="1.5">
+        <el-button
+          type="info"
+          plain
+          icon="Refresh"
+          @click="getList"
+          v-hasPermi="['base:source:list']"
+        >刷新排序</el-button>
       </el-col>
       <right-toolbar v-model:showSearch="showSearch" @queryTable="getList"></right-toolbar>
     </el-row>
@@ -99,13 +117,40 @@
       </el-table-column>
       <el-table-column label="状态" align="center" prop="status">
         <template #default="scope">
-          <dict-tag :options="sys_job_status" :value="scope.row.status"/>
+          <el-switch
+            v-model="scope.row.status"
+            :active-value="0"
+            :inactive-value="1"
+            @change="handleStatusChange(scope.row)"
+          ></el-switch>
         </template>
       </el-table-column>
-      <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
+      <el-table-column label="排序号" align="center" prop="sort">
         <template #default="scope">
-          <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)" v-hasPermi="['base:source:edit']">修改</el-button>
-          <el-button link type="primary" icon="Delete" @click="handleDelete(scope.row)" v-hasPermi="['base:source:remove']">删除</el-button>
+          <el-input-number
+            v-model="scope.row.sort"
+            :min="0"
+            :max="9999"
+            :step="1"
+            size="small"
+            @change="(value) => handleSortChange(scope.row, value)"
+            @blur="handleSortBlur(scope.row)"
+            placeholder="排序号"
+            :validate-event="false"
+            class="sort-input"
+            :style="{width: '100px'}"
+          /><br/>
+          <span class="sort-tip">直接修改并回车保存</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="操作" align="center" width="150" class-name="small-padding fixed-width">
+        <template #default="scope">
+          <el-tooltip content="修改" placement="top">
+            <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)" v-hasPermi="['base:source:edit']"></el-button>
+          </el-tooltip>
+          <el-tooltip content="删除" placement="top">
+            <el-button link type="primary" icon="Delete" @click="handleDelete(scope.row)" v-hasPermi="['base:source:remove']"></el-button>
+          </el-tooltip>
         </template>
       </el-table-column>
     </el-table>
@@ -227,14 +272,51 @@
         </div>
       </template>
     </el-dialog>
+    <el-dialog :title="upload.title" v-model="upload.open" width="400px" append-to-body>
+      <el-upload
+        ref="uploadRef"
+        :limit="1"
+        accept=".xlsx, .xls"
+        :headers="upload.headers"
+        :action="upload.url + '?updateSupport=' + upload.updateSupport"
+        :disabled="upload.isUploading"
+        :on-progress="handleFileUploadProgress"
+        :on-success="handleFileSuccess"
+        :on-change="handleFileChange"
+        :on-remove="handleFileRemove"
+        :auto-upload="false"
+        drag
+      >
+        <el-icon class="el-icon--upload"><upload-filled /></el-icon>
+        <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
+        <template #tip>
+          <div class="el-upload__tip text-center">
+            <div class="el-upload__tip">
+              <el-checkbox v-model="upload.updateSupport" />是否更新已经存在的线索来源数据
+            </div>
+            <span>仅允许导入xls、xlsx格式文件。</span>
+            <el-link type="primary" :underline="false" style="font-size: 12px; vertical-align: baseline" @click="importTemplate">下载模板</el-link>
+          </div>
+        </template>
+      </el-upload>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button type="primary" @click="submitFileForm">确 定</el-button>
+          <el-button @click="upload.open = false">取 消</el-button>
+        </div>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup name="Source">
 import { listSource, getSource, delSource, addSource, updateSource } from "@/api/base/source"
+import { getToken } from "@/utils/auth"
+import useUserStore from "@/store/modules/user"
 
 const { proxy } = getCurrentInstance()
 const { sys_job_status, sys_yes_no, mk_source_type } = proxy.useDict('sys_job_status', 'sys_yes_no', 'mk_source_type')
+const userStore = useUserStore()
 
 // 添加防抖函数用于搜索输入
 function debounce(func, wait) {
@@ -261,6 +343,15 @@ const single = ref(true)
 const multiple = ref(true)
 const total = ref(0)
 const title = ref("")
+const upload = reactive({
+  open: false,
+  title: "",
+  isUploading: false,
+  updateSupport: 0,
+  headers: { Authorization: "Bearer " + getToken() },
+  url: import.meta.env.VITE_APP_BASE_API + "/base/source/importData",
+  selectedFile: null
+})
 
 const data = reactive({
   form: {},
@@ -318,12 +409,16 @@ const { queryParams, form, rules } = toRefs(data)
 /** 查询线索来源列表 */
 function getList() {
   loading.value = true
-  // 简化查询参数，只保留必要的分页和排序参数
+  // 添加搜索参数到查询数据中
   const queryData = {
     pageNum: queryParams.value.pageNum || 1,
     pageSize: queryParams.value.pageSize || 10,
     orderByColumn: queryParams.value.orderByColumn || 'sort',
-    isAsc: queryParams.value.isAsc || 'asc'
+    isAsc: queryParams.value.isAsc || 'asc',
+    sourceName: queryParams.value.sourceName,
+    sourceType: queryParams.value.sourceType,
+    status: queryParams.value.status,
+    delFlag: queryParams.value.delFlag || 0
   }
   console.log('Query data:', queryData);
   
@@ -466,7 +561,9 @@ function submitForm() {
           sourceDesc: form.value.sourceDesc,
           sourceCost: form.value.sourceCost,
           sort: form.value.sort,
-          status: form.value.status
+          status: form.value.status,
+          updateBy: userStore.name, // 添加更新人用户名
+          updateId: userStore.id // 添加更新人ID
         }
         updateSource(updateData).then(response => {
           proxy.$modal.msgSuccess("修改成功")
@@ -486,7 +583,9 @@ function submitForm() {
           sourceDesc: form.value.sourceDesc,
           sourceCost: form.value.sourceCost,
           sort: form.value.sort,
-          status: form.value.status
+          status: form.value.status,
+          createBy: userStore.name, // 添加创建人用户名
+          createId: userStore.id // 添加创建人ID
         }
         addSource(submitData).then(response => {
           proxy.$modal.msgSuccess("新增成功")
@@ -582,6 +681,130 @@ function handleExport() {
   proxy.download('base/source/export', {
     ...queryParams.value
   }, `source_${new Date().getTime()}.xlsx`)
+}
+
+function handleStatusChange(row) {
+  const text = row.status === 0 ? "启用" : "停用"
+  proxy.$modal.confirm('确认要"' + text + '""' + (row.sourceName || '') + '"线索来源吗?').then(function () {
+    const data = { 
+      sourceId: row.sourceId, 
+      status: row.status,
+      updateBy: userStore.name, // 添加更新人用户名
+      updateId: userStore.id // 添加更新人ID
+    }
+    return updateSource(data)
+  }).then(() => {
+    proxy.$modal.msgSuccess(text + "成功")
+  }).catch(function () {
+    row.status = row.status === 0 ? 1 : 0
+  })
+}
+
+// 添加防抖函数用于排序更新
+function debounceSort(func, wait) {
+  let timeout
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout)
+      func(...args)
+    }
+    clearTimeout(timeout)
+    timeout = setTimeout(later, wait)
+  }
+}
+
+// 防抖处理排序更新
+const debouncedSortChange = debounceSort((row, value) => {
+  // 验证排序号
+  if (!validateSort(value)) {
+    proxy.$modal.msgError("排序号应在0到9999之间的有效数字")
+    // 恢复原值
+    getSource(row.sourceId).then(response => {
+      row.sort = response.data.sort
+    })
+    return
+  }
+  
+  // 直接保存排序号变更
+  const data = { 
+    sourceId: row.sourceId, 
+    sort: value,
+    updateBy: userStore.name, // 添加更新人用户名
+    updateId: userStore.id // 添加更新人ID
+  }
+  
+  updateSource(data).then(() => {
+    proxy.$modal.msgSuccess("排序更新成功")
+    // 重新获取列表以确保正确排序
+    getList()
+  }).catch(error => {
+    console.error("更新排序失败:", error)
+    proxy.$modal.msgError("更新排序失败，请重试")
+    // 恢复原值
+    getSource(row.sourceId).then(response => {
+      row.sort = response.data.sort
+    })
+  })
+}, 500)
+
+// 处理排序号变更（即时保存）
+function handleSortChange(row, value) {
+  debouncedSortChange(row, value)
+}
+
+// 处理排序号输入框失焦事件
+function handleSortBlur(row) {
+  // 如果输入框失去焦点但值未变，不需要处理
+  // 主要用于处理用户可能输入的非法值
+  if (!row.sort && row.sort !== 0) {
+    row.sort = 0
+    handleSortChange(row)
+  }
+}
+
+// 验证排序号
+function validateSort(sort) {
+  const numValue = Number(sort)
+  return !isNaN(numValue) && numValue >= 0 && numValue <= 9999
+}
+
+function handleImport() {
+  upload.title = "线索来源导入"
+  upload.open = true
+  upload.selectedFile = null
+}
+
+function importTemplate() {
+  proxy.$download.zip("base/source/importTemplate", `source_template_${new Date().getTime()}.xlsx`)
+}
+
+const handleFileUploadProgress = (event, file, fileList) => {
+  upload.isUploading = true
+}
+
+const handleFileChange = (file, fileList) => {
+  upload.selectedFile = file
+}
+
+const handleFileRemove = (file, fileList) => {
+  upload.selectedFile = null
+}
+
+const handleFileSuccess = (response, file, fileList) => {
+  upload.open = false
+  upload.isUploading = false
+  proxy.$refs["uploadRef"].handleRemove(file)
+  proxy.$alert("<div style='overflow: auto;overflow-x: hidden;max-height: 70vh;padding: 10px 20px 0;'>" + response.msg + "</div>", "导入结果", { dangerouslyUseHTMLString: true })
+  getList()
+}
+
+function submitFileForm() {
+  const file = upload.selectedFile
+  if (!file || file.length === 0 || (!file.name.toLowerCase().endsWith('.xls') && !file.name.toLowerCase().endsWith('.xlsx'))) {
+    proxy.$modal.msgError("请选择后缀为 “xls”或“xlsx”的文件。")
+    return
+  }
+  proxy.$refs["uploadRef"].submit()
 }
 
 getList()
@@ -772,11 +995,53 @@ getList()
   overflow: hidden;
 }
 
+/* 排序输入框样式优化 */
+.sort-input .el-input-number__decrease,
+.sort-input .el-input-number__increase {
+  background-color: #f0f2f5;
+  border-color: #dcdfe6;
+}
+
+.sort-input .el-input-number__decrease:hover,
+.sort-input .el-input-number__increase:hover {
+  background-color: #ecf5ff;
+  border-color: #c6e2ff;
+}
+
+.sort-input .el-input-number__decrease.is-active,
+.sort-input .el-input-number__increase.is-active {
+  background-color: #409eff;
+  border-color: #409eff;
+}
+
+/* 排序提示样式 */
+.sort-tip {
+  font-size: 10px;
+  color: #909399;
+  margin-left: 5px;
+  vertical-align: middle;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.el-table__row:hover .sort-tip {
+  opacity: 1;
+}
+
 /* 分页组件样式 */
 .el-pagination {
   margin-top: 20px;
   display: flex;
   justify-content: flex-end;
+}
+
+/* 数据量选择控件样式 - 增加宽度以完整显示内容 */
+.el-pagination .el-pagination__sizes {
+  min-width: 150px;
+}
+
+.el-pagination .el-select .el-input {
+  width: 150px;
 }
 
 /* 表单标签样式 */

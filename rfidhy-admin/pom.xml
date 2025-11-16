@@ -54,9 +54,16 @@
             <artifactId>rfidhy-generator</artifactId>
         </dependency>
 
+        <!-- 线索来源-->
         <dependency>
             <groupId>com.rfidhy</groupId>
             <artifactId>rfidhy-base</artifactId>
+        </dependency>
+
+        <!-- 线索表-->
+        <dependency>
+            <groupId>com.rfidhy</groupId>
+            <artifactId>rfidhy-market</artifactId>
         </dependency>
 
     </dependencies>

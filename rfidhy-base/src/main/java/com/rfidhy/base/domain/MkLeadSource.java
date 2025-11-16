@@ -16,21 +16,21 @@ public class MkLeadSource extends BaseEntity
 {
     private static final long serialVersionUID = 1L;
 
-    /** 来源ID（雪花ID） */
+    /** 来源ID（自增ID） */
     private Long sourceId;
 
-    /** 来源名称（如“官网表单”“2024上海RFID展会”） */
-    @Excel(name = "来源名称", readConverterExp = "如=“官网表单”“2024上海RFID展会”")
+    /** 来源名称（如"官网表单""2024上海RFID展会"） */
+    @Excel(name = "来源名称")
     private String sourceName;
 
     /** 来源类型（关联字典：mk_source_type；0-线上/1-线下/2-合作渠道） */
-    @Excel(name = "来源类型", readConverterExp = "关=联字典：mk_source_type；0-线上/1-线下/2-合作渠道")
+    @Excel(name = "来源类型", dictType = "mk_source_type")
     private String sourceType;
 
     /** 来源负责人ID（关联sys_user.user_id） */
     private Long sourceOwnerId;
 
-    /** 来源描述（如“官网表单嵌入产品详情页，用户填写后自动生成线索”） */
+    /** 来源描述（如"官网表单嵌入产品详情页，用户填写后自动生成线索"） */
     private String sourceDesc;
 
     /** 渠道成本（预留：后期统计ROI用） */
@@ -40,19 +40,19 @@ public class MkLeadSource extends BaseEntity
     private Long sort;
 
     /** 状态（关联字典：sys_normal_status；0-禁用/1-启用） */
-    @Excel(name = "状态", readConverterExp = "关=联字典：sys_normal_status；0-禁用/1-启用")
+    @Excel(name = "状态", dictType = "sys_normal_status")
     private Integer status;
 
     /** 删除标记（0-正常/1-删除） */
     private String delFlag;
 
-    /** 预留字段1（后期扩展用，如“渠道URL”） */
+    /** 预留字段1（后期扩展用，如"渠道URL"） */
     private String reserved1;
 
-    /** 预留字段2（后期扩展用，如“渠道合作协议内容”） */
+    /** 预留字段2（后期扩展用，如"渠道合作协议内容"） */
     private String reserved2;
 
-    /** 预留字段3（后期扩展用，如“关联合作方ID”） */
+    /** 预留字段3（后期扩展用，如"关联合作方ID"） */
     private Long reserved3;
 
     public void setSourceId(Long sourceId) 

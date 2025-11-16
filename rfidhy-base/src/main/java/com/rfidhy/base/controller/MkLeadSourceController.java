@@ -11,7 +11,9 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 import com.rfidhy.common.annotation.Log;
 import com.rfidhy.common.core.controller.BaseController;
 import com.rfidhy.common.core.domain.AjaxResult;
@@ -100,5 +102,31 @@ public class MkLeadSourceController extends BaseController
     public AjaxResult remove(@PathVariable Long[] sourceIds)
     {
         return toAjax(mkLeadSourceService.deleteMkLeadSourceBySourceIds(sourceIds));
+    }
+
+    /**
+     * 下载模板
+     */
+    @PreAuthorize("@ss.hasPermi('base:source:import')")
+    @GetMapping("/importTemplate")
+    public void importTemplate(HttpServletResponse response)
+    {
+        ExcelUtil<MkLeadSource> util = new ExcelUtil<MkLeadSource>(MkLeadSource.class);
+        util.importTemplateExcel(response, "线索来源数据");
+    }
+    
+    /**
+     * 导入数据
+     */
+    @PreAuthorize("@ss.hasPermi('base:source:import')")
+    @Log(title = "线索来源", businessType = BusinessType.IMPORT)
+    @PostMapping("/importData")
+    public AjaxResult importData(@RequestParam("file") MultipartFile file, @RequestParam("updateSupport") Boolean updateSupport) throws Exception
+    {
+        ExcelUtil<MkLeadSource> util = new ExcelUtil<MkLeadSource>(MkLeadSource.class);
+        List<MkLeadSource> sourceList = util.importExcel(file.getInputStream());
+        String operName = getUsername();
+        String message = mkLeadSourceService.importMkLeadSource(sourceList, updateSupport, operName);
+        return success(message);
     }
 }

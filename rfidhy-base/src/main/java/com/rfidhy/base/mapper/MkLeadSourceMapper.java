@@ -20,6 +20,14 @@ public interface MkLeadSourceMapper
     public MkLeadSource selectMkLeadSourceBySourceId(Long sourceId);
 
     /**
+     * 根据名称查询线索来源
+     * 
+     * @param sourceName 线索来源名称
+     * @return 线索来源
+     */
+    public MkLeadSource selectMkLeadSourceByName(String sourceName);
+
+    /**
      * 查询线索来源列表
      * 
      * @param mkLeadSource 线索来源

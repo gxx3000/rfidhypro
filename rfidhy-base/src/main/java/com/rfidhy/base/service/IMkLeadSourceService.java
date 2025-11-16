@@ -58,4 +58,14 @@ public interface IMkLeadSourceService
      * @return 结果
      */
     public int deleteMkLeadSourceBySourceId(Long sourceId);
+    
+    /**
+     * 导入线索来源数据
+     * 
+     * @param sourceList 线索来源列表
+     * @param updateSupport 是否更新已存在的数据
+     * @param operName 操作用户
+     * @return 结果
+     */
+    public String importMkLeadSource(List<MkLeadSource> sourceList, Boolean updateSupport, String operName);
 }

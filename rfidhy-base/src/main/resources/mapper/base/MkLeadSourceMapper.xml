@@ -41,11 +41,16 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         <include refid="selectMkLeadSourceVo"/>
         where source_id = #{sourceId}
     </select>
+    
+    <select id="selectMkLeadSourceByName" parameterType="String" resultMap="MkLeadSourceResult">
+        <include refid="selectMkLeadSourceVo"/>
+        where source_name = #{sourceName} and del_flag = '0' limit 1
+    </select>
 
-    <insert id="insertMkLeadSource" parameterType="MkLeadSource">
+    <insert id="insertMkLeadSource" parameterType="MkLeadSource" useGeneratedKeys="true" keyProperty="sourceId">
         insert into mk_lead_source
         <trim prefix="(" suffix=")" suffixOverrides=",">
-            <if test="sourceId != null">source_id,</if>
+            source_id,
             <if test="sourceName != null and sourceName != ''">source_name,</if>
             <if test="sourceType != null and sourceType != ''">source_type,</if>
             <if test="sourceOwnerId != null">source_owner_id,</if>
@@ -55,7 +60,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="status != null">status,</if>
             <if test="delFlag != null and delFlag != ''">del_flag,</if>
             <if test="createBy != null and createBy != ''">create_by,</if>
-            <if test="createTime != null">create_time,</if>
+            create_time,
             <if test="updateBy != null and updateBy != ''">update_by,</if>
             <if test="updateTime != null">update_time,</if>
             <if test="reserved1 != null">reserved1,</if>
@@ -63,7 +68,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="reserved3 != null">reserved3,</if>
          </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
-            <if test="sourceId != null">#{sourceId},</if>
+            NULL,
             <if test="sourceName != null and sourceName != ''">#{sourceName},</if>
             <if test="sourceType != null and sourceType != ''">#{sourceType},</if>
             <if test="sourceOwnerId != null">#{sourceOwnerId},</if>
@@ -73,7 +78,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="status != null">#{status},</if>
             <if test="delFlag != null and delFlag != ''">#{delFlag},</if>
             <if test="createBy != null and createBy != ''">#{createBy},</if>
-            <if test="createTime != null">#{createTime},</if>
+            #{createTime},
             <if test="updateBy != null and updateBy != ''">#{updateBy},</if>
             <if test="updateTime != null">#{updateTime},</if>
             <if test="reserved1 != null">#{reserved1},</if>
