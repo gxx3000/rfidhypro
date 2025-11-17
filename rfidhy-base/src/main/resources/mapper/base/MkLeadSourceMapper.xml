@@ -33,7 +33,8 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="sourceName != null  and sourceName != ''"> and source_name like concat('%', #{sourceName}, '%')</if>
             <if test="sourceType != null  and sourceType != ''"> and source_type = #{sourceType}</if>
             <if test="status != null "> and status = #{status}</if>
-            and del_flag = '0'
+            <if test="delFlag != null and delFlag != ''"> and del_flag = #{delFlag}</if>
+            <if test="delFlag == null or delFlag == ''"> and del_flag = '0'</if>
         </where>
     </select>
     
@@ -109,14 +110,23 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         where source_id = #{sourceId}
     </update>
 
-    <delete id="deleteMkLeadSourceBySourceId" parameterType="Long">
-        delete from mk_lead_source where source_id = #{sourceId}
-    </delete>
+    <update id="deleteMkLeadSourceBySourceId" parameterType="MkLeadSource">
+        update mk_lead_source
+        <set>
+            del_flag = #{delFlag},
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+        </set>
+        where source_id = #{sourceId}
+    </update>
 
-    <delete id="deleteMkLeadSourceBySourceIds" parameterType="String">
-        delete from mk_lead_source where source_id in 
+    <update id="deleteMkLeadSourceBySourceIds" parameterType="MkLeadSource">
+        update mk_lead_source set del_flag = #{delFlag}
+        <if test="updateTime != null">
+            ,update_time = #{updateTime}
+        </if>
+        where source_id in 
         <foreach item="sourceId" collection="array" open="(" separator="," close=")">
             #{sourceId}
         </foreach>
-    </delete>
+    </update>
 </mapper>

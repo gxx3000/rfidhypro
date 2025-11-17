@@ -80,7 +80,7 @@ public class MkLeadSourceServiceImpl implements IMkLeadSourceService
     @Override
     public int deleteMkLeadSourceBySourceIds(Long[] sourceIds)
     {
-        return mkLeadSourceMapper.deleteMkLeadSourceBySourceIds(sourceIds);
+        return mkLeadSourceMapper.deleteMkLeadSourceBySourceIds(sourceIds, "1", DateUtils.getNowDate());
     }
 
     /**
@@ -92,7 +92,11 @@ public class MkLeadSourceServiceImpl implements IMkLeadSourceService
     @Override
     public int deleteMkLeadSourceBySourceId(Long sourceId)
     {
-        return mkLeadSourceMapper.deleteMkLeadSourceBySourceId(sourceId);
+        MkLeadSource source = new MkLeadSource();
+        source.setSourceId(sourceId);
+        source.setDelFlag("1");
+        source.setUpdateTime(DateUtils.getNowDate());
+        return mkLeadSourceMapper.deleteMkLeadSourceBySourceId(source);
     }
     
     /**

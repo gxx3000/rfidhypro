@@ -28,6 +28,7 @@ public class MkLead extends BaseEntity
     private String phone;
 
     /** 电子邮箱 */
+    @Excel(name = "电子邮箱")
     private String email;
 
     /** 线索来源 */
@@ -35,7 +36,7 @@ public class MkLead extends BaseEntity
     private Long sourceId;
 
     /** 线索状态 */
-    @Excel(name = "线索状态")
+    @Excel(name = "线索状态", dictType = "mk_assign_type")
     private String leadStatus;
 
     /** 负责人ID */
@@ -43,13 +44,15 @@ public class MkLead extends BaseEntity
     private Long assignTo;
 
     /** 线索等级 */
-    @Excel(name = "线索等级")
+    @Excel(name = "线索等级", dictType = "mk_lead_level")
     private String level;
 
     /** 地址 */
+    @Excel(name = "地址")
     private String address;
 
     /** 线索描述 */
+    @Excel(name = "线索描述")
     private String description;
 
     /** 删除标志 */

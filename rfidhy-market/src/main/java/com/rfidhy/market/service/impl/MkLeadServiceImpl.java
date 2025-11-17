@@ -49,6 +49,94 @@ public class MkLeadServiceImpl implements IMkLeadService
     }
 
     /**
+     * 导入线索数据
+     * 
+     * @param leadList 线索数据列表
+     * @param updateSupport 是否更新已存在的数据
+     * @param operName 操作用户
+     * @return 结果
+     */
+    @Override
+    public String importMkLead(List<MkLead> leadList, Boolean updateSupport, String operName) {
+        if (leadList == null || leadList.size() == 0) {
+            throw new RuntimeException("导入数据不能为空！");
+        }
+        
+        int successNum = 0;
+        int failureNum = 0;
+        StringBuilder successMsg = new StringBuilder();
+        StringBuilder failureMsg = new StringBuilder();
+        
+        for (MkLead lead : leadList) {
+            try {
+                // 检查必要字段
+                if (lead.getLeadName() == null || lead.getLeadName().trim().isEmpty()) {
+                    failureNum++;
+                    failureMsg.append("<br/>").append("第").append(successNum + failureNum).append("行：联系人不能为空");
+                    continue;
+                }
+                
+                if (lead.getPhone() == null || lead.getPhone().trim().isEmpty()) {
+                    failureNum++;
+                    failureMsg.append("<br/>").append("第").append(successNum + failureNum).append("行：联系电话不能为空");
+                    continue;
+                }
+                
+                // 去除名称前后空格
+                lead.setLeadName(lead.getLeadName().trim());
+                lead.setPhone(lead.getPhone().trim());
+                
+                // 检查是否存在相同联系人和电话的记录
+                MkLead existingLead = mkLeadMapper.selectMkLeadByNameAndPhone(lead.getLeadName(), lead.getPhone());
+                if (existingLead == null) {
+                    // 新增
+                    lead.setCreateBy(operName);
+                    lead.setCreateTime(DateUtils.getNowDate());
+                    lead.setDelFlag("0");
+                    
+                    // 设置默认值
+                    if (lead.getLeadStatus() == null) {
+                        lead.setLeadStatus("0"); // 默认未分配
+                    }
+                    
+                    this.insertMkLead(lead);
+                    successNum++;
+                    successMsg.append("<br/>").append("第").append(successNum + failureNum).append("行：新增成功");
+                } else if (updateSupport) {
+                    // 更新
+                    lead.setLeadId(existingLead.getLeadId());
+                    lead.setUpdateBy(operName);
+                    lead.setUpdateTime(DateUtils.getNowDate());
+                    this.updateMkLead(lead);
+                    successNum++;
+                    successMsg.append("<br/>").append("第").append(successNum + failureNum).append("行：更新成功");
+                } else {
+                    failureNum++;
+                    failureMsg.append("<br/>").append("第").append(successNum + failureNum).append("行：联系人和电话已存在");
+                }
+            } catch (Exception e) {
+                failureNum++;
+                String msg = "<br/>" + "第" + (successNum + failureNum) + "行：导入失败";
+                failureMsg.append(msg).append(e.getMessage());
+            }
+        }
+        
+        StringBuilder resultMsg = new StringBuilder();
+        if (failureNum > 0) {
+            resultMsg.append("很抱歉，导入失败！共 ").append(failureNum).append(" 条数据格式不正确，错误如下：");
+            resultMsg.append(failureMsg);
+        } else {
+            resultMsg.append("恭喜您，数据已全部导入成功！共 ").append(successNum).append(" 条");
+        }
+        
+        if (successNum > 0) {
+            resultMsg.append(successMsg);
+        }
+        
+        return resultMsg.toString();
+    }
+
+    /**
      * 新增线索表
      * 
      * @param mkLead 线索表
@@ -91,7 +179,7 @@ public class MkLeadServiceImpl implements IMkLeadService
     public int deleteMkLeadByLeadIds(Long[] leadIds)
     {
         mkLeadMapper.deleteMkLeadAssignByLeadIds(leadIds);
-        return mkLeadMapper.deleteMkLeadByLeadIds(leadIds);
+        return mkLeadMapper.deleteMkLeadByLeadIds(leadIds, "1", DateUtils.getNowDate());
     }
 
     /**
@@ -105,7 +193,11 @@ public class MkLeadServiceImpl implements IMkLeadService
     public int deleteMkLeadByLeadId(Long leadId)
     {
         mkLeadMapper.deleteMkLeadAssignByLeadId(leadId);
-        return mkLeadMapper.deleteMkLeadByLeadId(leadId);
+        MkLead lead = new MkLead();
+        lead.setLeadId(leadId);
+        lead.setDelFlag("1");
+        lead.setUpdateTime(DateUtils.getNowDate());
+        return mkLeadMapper.deleteMkLeadByLeadId(lead);
     }
 
     /**

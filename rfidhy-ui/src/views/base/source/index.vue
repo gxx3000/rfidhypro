@@ -103,6 +103,15 @@
           v-hasPermi="['base:source:list']"
         >刷新排序</el-button>
       </el-col>
+      <el-col :span="1.5">
+        <el-button
+          type="info"
+          plain
+          icon="View"
+          @click="toggleDelFlag"
+          v-hasPermi="['base:source:list']"
+        >{{ delFlagBtnText }}</el-button>
+      </el-col>
       <right-toolbar v-model:showSearch="showSearch" @queryTable="getList"></right-toolbar>
     </el-row>
 
@@ -343,6 +352,7 @@ const single = ref(true)
 const multiple = ref(true)
 const total = ref(0)
 const title = ref("")
+const delFlagBtnText = ref("显示已删除") // 添加这个ref来控制按钮文本
 const upload = reactive({
   open: false,
   title: "",
@@ -361,7 +371,7 @@ const data = reactive({
       sourceName: null,
       sourceType: null,
       status: null,
-      delFlag: 0, // 只查询未删除的数据（delFlag=0）
+      delFlag: '0', // 只查询未删除的数据（delFlag=0）
       // 添加排序参数，按sort字段升序排列
       orderByColumn: 'sort',
       isAsc: 'asc'
@@ -418,7 +428,7 @@ function getList() {
     sourceName: queryParams.value.sourceName,
     sourceType: queryParams.value.sourceType,
     status: queryParams.value.status,
-    delFlag: queryParams.value.delFlag || 0
+    delFlag: queryParams.value.delFlag || '0'
   }
   console.log('Query data:', queryData);
   
@@ -482,15 +492,28 @@ function resetQuery() {
   // 保存排序参数和删除标记，避免重置后丢失
   const orderByColumn = queryParams.value.orderByColumn
   const isAsc = queryParams.value.isAsc
-  const delFlag = queryParams.value.delFlag || 0
+  const delFlag = queryParams.value.delFlag || '0'
   
   proxy.resetForm("queryRef")
   
   // 恢复排序参数和删除标记
   queryParams.value.orderByColumn = orderByColumn
   queryParams.value.isAsc = isAsc
-  queryParams.value.delFlag = delFlag // 确保保留delFlag=0的条件
+  queryParams.value.delFlag = delFlag // 确保保留delFlag的条件
   
+  handleQuery()
+}
+
+// 添加切换删除标记显示状态的函数
+function toggleDelFlag() {
+  // 切换delFlag的值
+  if (queryParams.value.delFlag === '0' || !queryParams.value.delFlag) {
+    queryParams.value.delFlag = '1'
+    delFlagBtnText.value = "隐藏已删除"
+  } else {
+    queryParams.value.delFlag = '0'
+    delFlagBtnText.value = "显示已删除"
+  }
   handleQuery()
 }
 

@@ -1,6 +1,8 @@
 package com.rfidhy.market.mapper;
 
+import java.util.Date;
 import java.util.List;
+import org.apache.ibatis.annotations.Param;
 import com.rfidhy.market.domain.MkLead;
 import com.rfidhy.market.domain.MkLeadAssign;
 
@@ -29,6 +31,15 @@ public interface MkLeadMapper
     public List<MkLead> selectMkLeadList(MkLead mkLead);
 
     /**
+     * 根据联系人姓名和电话查询线索
+     * 
+     * @param leadName 联系人姓名
+     * @param phone 电话
+     * @return 线索
+     */
+    public MkLead selectMkLeadByNameAndPhone(@Param("leadName") String leadName, @Param("phone") String phone);
+
+    /**
      * 新增线索表
      * 
      * @param mkLead 线索表
@@ -47,18 +58,20 @@ public interface MkLeadMapper
     /**
      * 删除线索表
      * 
-     * @param leadId 线索表主键
+     * @param mkLead 线索表对象，包含leadId和delFlag
      * @return 结果
      */
-    public int deleteMkLeadByLeadId(Long leadId);
+    public int deleteMkLeadByLeadId(MkLead mkLead);
 
     /**
      * 批量删除线索表
      * 
      * @param leadIds 需要删除的数据主键集合
+     * @param delFlag 删除标记
+     * @param updateTime 更新时间
      * @return 结果
      */
-    public int deleteMkLeadByLeadIds(Long[] leadIds);
+    public int deleteMkLeadByLeadIds(@Param("array") Long[] leadIds, @Param("delFlag") String delFlag, @Param("updateTime") Date updateTime);
 
     /**
      * 批量删除线索分配

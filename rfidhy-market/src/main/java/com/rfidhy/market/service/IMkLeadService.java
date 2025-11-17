@@ -28,6 +28,16 @@ public interface IMkLeadService
     public List<MkLead> selectMkLeadList(MkLead mkLead);
 
     /**
+     * 导入线索数据
+     * 
+     * @param leadList 线索数据列表
+     * @param updateSupport 是否更新已存在的数据
+     * @param operName 操作用户
+     * @return 结果
+     */
+    public String importMkLead(List<MkLead> leadList, Boolean updateSupport, String operName);
+
+    /**
      * 新增线索表
      * 
      * @param mkLead 线索表

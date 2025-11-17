@@ -11,7 +11,9 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 import com.rfidhy.common.annotation.Log;
 import com.rfidhy.common.core.controller.BaseController;
 import com.rfidhy.common.core.domain.AjaxResult;
@@ -57,6 +59,30 @@ public class MkLeadController extends BaseController
         List<MkLead> list = mkLeadService.selectMkLeadList(mkLead);
         ExcelUtil<MkLead> util = new ExcelUtil<MkLead>(MkLead.class);
         util.exportExcel(response, list, "线索表数据");
+    }
+
+    /**
+     * 导入线索表列表
+     */
+    @PreAuthorize("@ss.hasPermi('market:lead:import')")
+    @Log(title = "线索表", businessType = BusinessType.IMPORT)
+    @PostMapping("/importData")
+    public AjaxResult importData(@RequestParam("file") MultipartFile file, boolean updateSupport) throws Exception {
+        ExcelUtil<MkLead> util = new ExcelUtil<MkLead>(MkLead.class);
+        List<MkLead> leadList = util.importExcel(file.getInputStream());
+        String operName = getUsername();
+        String message = mkLeadService.importMkLead(leadList, updateSupport, operName);
+        return AjaxResult.success(message);
+    }
+
+    /**
+     * 下载导入模板
+     */
+    @GetMapping("/importTemplate")
+    public void importTemplate(HttpServletResponse response)
+    {
+        ExcelUtil<MkLead> util = new ExcelUtil<MkLead>(MkLead.class);
+        util.importTemplateExcel(response, "线索表导入模板");
     }
 
     /**

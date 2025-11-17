@@ -1,6 +1,8 @@
 package com.rfidhy.base.mapper;
 
+import java.util.Date;
 import java.util.List;
+import org.apache.ibatis.annotations.Param;
 import com.rfidhy.base.domain.MkLeadSource;
 
 /**
@@ -54,16 +56,18 @@ public interface MkLeadSourceMapper
     /**
      * 删除线索来源
      * 
-     * @param sourceId 线索来源主键
+     * @param mkLeadSource 线索来源对象，包含sourceId和delFlag
      * @return 结果
      */
-    public int deleteMkLeadSourceBySourceId(Long sourceId);
+    public int deleteMkLeadSourceBySourceId(MkLeadSource mkLeadSource);
 
     /**
      * 批量删除线索来源
      * 
      * @param sourceIds 需要删除的数据主键集合
+     * @param delFlag 删除标记
+     * @param updateTime 更新时间
      * @return 结果
      */
-    public int deleteMkLeadSourceBySourceIds(Long[] sourceIds);
+    public int deleteMkLeadSourceBySourceIds(@Param("array") Long[] sourceIds, @Param("delFlag") String delFlag, @Param("updateTime") Date updateTime);
 }
