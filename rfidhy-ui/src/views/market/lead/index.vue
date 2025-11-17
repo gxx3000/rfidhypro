@@ -152,7 +152,11 @@
           <dict-tag :options="mk_lead_level" :value="scope.row.level"/>
         </template>
       </el-table-column>
-      <el-table-column label="负责人ID" align="center" prop="assignTo" />
+      <el-table-column label="负责人名" align="center">
+        <template #default="scope">
+          {{ getUserName(scope.row.assignTo) }}
+        </template>
+      </el-table-column>
       
       <el-table-column label="创建者" align="center">
         <template #default="scope">
@@ -162,9 +166,10 @@
       
       <el-table-column label="备注" align="center" prop="remark" />
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">
-        <template #default="scope">
-          <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)" v-hasPermi="['market:lead:edit']">修改</el-button>
-          <el-button link type="primary" icon="Delete" @click="handleDelete(scope.row)" v-hasPermi="['market:lead:remove']">删除</el-button>
+            <template #default="scope">
+              <el-button link type="primary" icon="User" @click="handleAssign(scope.row)" v-hasPermi="['market:lead:assign']" />
+              <el-button link type="primary" icon="Edit" @click="handleUpdate(scope.row)" v-hasPermi="['market:lead:edit']" />
+              <el-button link type="primary" icon="Delete" @click="handleDelete(scope.row)" v-hasPermi="['market:lead:remove']" />
         </template>
       </el-table-column>
     </el-table>
@@ -180,6 +185,7 @@
     <!-- 添加或修改线索表对话框 -->
     <el-dialog :title="title" v-model="open" width="900px" append-to-body>
       <el-form ref="leadRef" :model="form" :rules="rules" label-width="80px">
+      
         <!-- 第一行：联系人与线索来源 -->
         <el-row :gutter="20">
           <el-col :span="12">
@@ -254,54 +260,39 @@
           <el-input v-model="form.delFlag" placeholder="请输入删除标志" />
         </el-form-item>
         <el-divider content-position="center">线索分配信息</el-divider>
-        <el-row :gutter="10" class="mb8">
-          <el-col :span="1.5">
-            <el-button type="primary" icon="Plus" @click="handleAddMkLeadAssign">添加</el-button>
-          </el-col>
-          <el-col :span="1.5">
-            <el-button type="danger" icon="Delete" @click="handleDeleteMkLeadAssign">删除</el-button>
-          </el-col>
-        </el-row>
-        <el-table :data="mkLeadAssignList" :row-class-name="rowMkLeadAssignIndex" @selection-change="handleMkLeadAssignSelectionChange" ref="mkLeadAssign">
-          <el-table-column type="selection" width="50" align="center" />
+<!--        <el-row :gutter="10" class="mb8">-->
+<!--          <el-col :span="1.5">-->
+<!--            <el-button type="primary" icon="Plus" @click="handleAddMkLeadAssign">添加</el-button>-->
+<!--          </el-col>-->
+<!--          <el-col :span="1.5">-->
+<!--            <el-button type="danger" icon="Delete" @click="handleDeleteMkLeadAssign">删除</el-button>-->
+<!--          </el-col>-->
+<!--        </el-row>-->
+        <el-table :data="mkLeadAssignList" :row-class-name="rowMkLeadAssignIndex" ref="mkLeadAssign" >
           <el-table-column label="序号" align="center" prop="index" width="50"/>
-          <el-table-column label="原负责人ID" prop="oldUserId" width="150">
+          <el-table-column label="原负责人" width="150" align="center">
             <template #default="scope">
-              <el-input v-model="scope.row.oldUserId" placeholder="请输入原负责人ID" />
+              {{ getUserName(scope.row.oldUserId) }}
             </template>
           </el-table-column>
-          <el-table-column label="新负责人ID" prop="newUserId" width="150">
+          <el-table-column label="新负责人" width="150" align="center">
             <template #default="scope">
-              <el-select v-model="scope.row.newUserId" placeholder="请选择新负责人ID">
-                <el-option label="请选择字典生成" value="" />
-              </el-select>
+              {{ getUserName(scope.row.newUserId) }}
             </template>
           </el-table-column>
-          <el-table-column label="分配类型" prop="assignType" width="150">
+          <el-table-column label="分配类型" prop="assignType" width="150" align="center">
             <template #default="scope">
-              <el-select v-model="scope.row.assignType" placeholder="请选择分配类型">
-                <el-option
-                  v-for="dict in mk_assign_type"
-                  :key="dict.value"
-                  :label="dict.label"
-                  :value="dict.value"
-                ></el-option>
-              </el-select>
+              {{ getAssignTypeName(scope.row.assignType) }}
             </template>
           </el-table-column>
-          <el-table-column label="分配原因" prop="assignReason" width="150">
+          <el-table-column label="分配原因" prop="assignReason" width="150" align="center">
             <template #default="scope">
-              <el-input v-model="scope.row.assignReason" placeholder="请输入分配原因" />
+              {{ scope.row.assignReason || '-' }}
             </template>
           </el-table-column>
-          <el-table-column label="分配时间" prop="assignTime" width="240">
+          <el-table-column label="分配时间" prop="assignTime" width="240" align="center">
             <template #default="scope">
-              <el-date-picker clearable
-                v-model="scope.row.assignTime"
-                type="date"
-                value-format="YYYY-MM-DD"
-                placeholder="请选择分配时间">
-              </el-date-picker>
+              {{ scope.row.assignTime || '-' }}
             </template>
           </el-table-column>
         </el-table>
@@ -310,6 +301,37 @@
         <div class="dialog-footer">
           <el-button type="primary" @click="submitForm">确 定</el-button>
           <el-button @click="cancel">取 消</el-button>
+        </div>
+      </template>
+    </el-dialog>
+
+    <!-- 分配线索对话框 -->
+    <el-dialog :title="'分配线索给业务员'" v-model="assignDialogVisible" width="500px" append-to-body>
+      <el-form ref="assignRef" :model="assignForm" :rules="assignRules" label-width="100px">
+        <el-form-item label="联系人" prop="leadName">
+          <el-input v-model="assignForm.leadName" disabled />
+        </el-form-item>
+        <el-form-item label="当前负责人" prop="currentAssignTo">
+          <el-input v-model="assignForm.currentAssignTo" disabled />
+        </el-form-item>
+        <el-form-item label="新负责人" prop="newAssignTo" required>
+          <el-select v-model="assignForm.newAssignTo" placeholder="请选择新负责人" filterable>
+            <el-option
+              v-for="user in userList"
+              :key="user.userId"
+              :label="user.nickName || user.userName"
+              :value="user.userId">
+            </el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="分配原因" prop="assignReason">
+          <el-input v-model="assignForm.assignReason" type="textarea" placeholder="请输入分配原因" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button type="primary" @click="submitAssignForm">确 定</el-button>
+          <el-button @click="cancelAssign">取 消</el-button>
         </div>
       </template>
     </el-dialog>
@@ -347,6 +369,18 @@ const showDeleted = ref(false)
 
 const data = reactive({
   form: {},
+  assignForm: {
+    leadId: null,
+    leadName: '',
+    currentAssignTo: '',
+    newAssignTo: '',
+    assignReason: ''
+  },
+  assignRules: {
+    newAssignTo: [
+      { required: true, message: "请选择新负责人", trigger: "change" }
+    ]
+  },
   queryParams: {
     pageNum: 1,
     pageSize: 10,
@@ -385,7 +419,10 @@ const data = reactive({
   }
 })
 
-const { queryParams, form, rules } = toRefs(data)
+const { queryParams, form, rules, assignForm, assignRules } = toRefs(data)
+
+// 分配对话框是否显示
+const assignDialogVisible = ref(false)
 
 /** 获取线索来源列表 */
 function getSourceList() {
@@ -402,6 +439,12 @@ function getSourceList() {
 function getSourceName(sourceId) {
   const source = sourceList.value.find(item => item.value === sourceId);
   return source ? source.label : '-';
+}
+
+/** 根据assignType获取分配类型名称 */
+function getAssignTypeName(assignType) {
+  const type = mk_assign_type.value.find(item => item.value === assignType);
+  return type ? type.label : '-';
 }
 
 /** 处理线索状态变化事件 */
@@ -807,6 +850,127 @@ function handleDeleteMkLeadAssign() {
 /** 复选框选中数据 */
 function handleMkLeadAssignSelectionChange(selection) {
   checkedMkLeadAssign.value = selection.map(item => item.index)
+}
+
+/** 处理分配按钮点击事件 */
+function handleAssign(row) {
+  // 确保加载用户列表
+  loadUserList()
+  
+  // 填充分配表单数据
+  assignForm.value.leadId = row.leadId
+  assignForm.value.leadName = row.leadName || ''
+  
+  // 获取当前负责人名称
+  if (row.assignTo) {
+    const currentUser = userList.value.find(u => String(u.userId) === String(row.assignTo))
+    assignForm.value.currentAssignTo = currentUser ? (currentUser.nickName || currentUser.userName) : `用户${row.assignTo}`
+  } else {
+    assignForm.value.currentAssignTo = '-'
+  }
+  
+  // 重置其他字段
+  assignForm.value.newAssignTo = ''
+  assignForm.value.assignReason = ''
+  
+  // 显示分配对话框
+  assignDialogVisible.value = true
+}
+
+/** 提交分配表单 */
+async function submitAssignForm() {
+  try {
+    // 验证表单
+    await proxy.$refs["assignRef"].validate()
+    
+    console.log("开始分配操作，线索ID:", assignForm.value.leadId)
+    
+    // 获取线索信息
+    const leadResponse = await getLead(assignForm.value.leadId)
+    const leadData = leadResponse.data
+    
+    // 更新负责人信息
+    const oldAssignTo = leadData.assignTo || null
+    leadData.assignTo = assignForm.value.newAssignTo
+    
+    // 将线索状态更新为已分配
+    const previousStatus = leadData.leadStatus
+    leadData.leadStatus = '1' // '1'表示已分配状态
+    console.log("线索状态已从", previousStatus, "更新为已分配(1)，当前状态值:", leadData.leadStatus)
+    
+    // 如果存在线索分配列表，添加新的分配记录
+    if (!leadData.mkLeadAssignList) {
+      leadData.mkLeadAssignList = []
+    }
+    
+    // 获取当前用户信息，添加安全检查
+    const userStore = proxy.userStore || {}
+    // 确保create_by字段不为空，使用默认值'1'（管理员ID）作为后备
+    const currentUserId = String(userStore.id || '1') // 确保是字符串类型
+    console.log("当前用户ID:", currentUserId, "类型:", typeof currentUserId)
+    
+    // 格式化时间为后端需要的'yyyy-MM-dd HH:mm:ss'格式
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    const formattedTime = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+    
+    // 同时在主leadData对象上设置create_by字段，确保后端处理时能获取到
+    leadData.create_by = currentUserId
+    console.log("主线索对象的create_by字段:", leadData.create_by)
+    
+    // 创建新的分配记录，确保数据类型正确
+    const assignRecord = {
+      oldUserId: oldAssignTo, // 不转换为空字符串，保留null值
+      newUserId: assignForm.value.newAssignTo, // 保持原始类型
+      assignType: '1', // 假设1表示手动分配
+      assignReason: assignForm.value.assignReason || '',
+      assignTime: formattedTime, // 使用格式化的时间字符串
+      create_by: currentUserId, // 使用当前用户ID
+      createTime: formattedTime, // 使用格式化的时间字符串
+      leadId: assignForm.value.leadId // 明确添加线索ID
+    }
+    
+    console.log("创建分配记录:", assignRecord)
+    leadData.mkLeadAssignList.push(assignRecord)
+    
+    // 提交更新前再次确认状态值
+    console.log("提交更新的线索数据:", {
+      leadId: leadData.leadId,
+      assignTo: leadData.assignTo,
+      leadStatus: leadData.leadStatus, // 记录状态值
+      statusText: '已分配', // 记录状态文本说明
+      assignRecordCount: leadData.mkLeadAssignList.length
+    })
+    
+    // 确保状态字段被正确包含在提交数据中
+    const leadDataToSubmit = {
+      ...leadData,
+      leadStatus: leadData.leadStatus || '1' // 确保状态值存在
+    }
+    
+    const updateResponse = await updateLead(leadDataToSubmit)
+    console.log("更新响应:", updateResponse)
+    
+    // 关闭对话框并刷新列表
+    proxy.$modal.msgSuccess("分配成功")
+    assignDialogVisible.value = false
+    getList()
+  } catch (error) {
+    console.error("分配失败:", error)
+    // 显示更具体的错误信息
+    const errorMessage = error.response?.data?.msg || error.message || "未知错误"
+    proxy.$modal.msgError(`分配失败: ${errorMessage}`)
+  }
+}
+
+/** 取消分配操作 */
+function cancelAssign() {
+  assignDialogVisible.value = false
 }
 
 /** 导出按钮操作 */

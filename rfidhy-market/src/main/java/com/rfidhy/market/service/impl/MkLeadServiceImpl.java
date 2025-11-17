@@ -11,6 +11,8 @@ import com.rfidhy.market.domain.MkLeadAssign;
 import com.rfidhy.market.mapper.MkLeadMapper;
 import com.rfidhy.market.domain.MkLead;
 import com.rfidhy.market.service.IMkLeadService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 线索表Service业务层处理
@@ -21,6 +23,8 @@ import com.rfidhy.market.service.IMkLeadService;
 @Service
 public class MkLeadServiceImpl implements IMkLeadService 
 {
+    private static final Logger log = LoggerFactory.getLogger(MkLeadServiceImpl.class);
+    
     @Autowired
     private MkLeadMapper mkLeadMapper;
 
@@ -215,11 +219,29 @@ public class MkLeadServiceImpl implements IMkLeadService
             for (MkLeadAssign mkLeadAssign : mkLeadAssignList)
             {
                 mkLeadAssign.setLeadId(leadId);
+                mkLeadAssign.setCreateBy(mkLead.getCreateBy());
+                mkLeadAssign.setCreateTime(DateUtils.getNowDate());
                 list.add(mkLeadAssign);
             }
             if (list.size() > 0)
             {
+                log.info("开始批量插入线索分配记录，数量: {}", list.size());
                 mkLeadMapper.batchMkLeadAssign(list);
+                log.info("完成批量插入线索分配记录");
+                
+                // 如果有分配记录，则更新线索状态为已分配
+                MkLead updateLead = new MkLead();
+                updateLead.setLeadId(leadId);
+                updateLead.setLeadStatus("1"); // 1表示已分配
+                updateLead.setAssignTo(list.get(0).getNewUserId()); // 设置负责人为新分配的用户
+                updateLead.setUpdateBy(mkLead.getUpdateBy() != null ? mkLead.getUpdateBy() : mkLead.getCreateBy());
+                updateLead.setUpdateTime(DateUtils.getNowDate());
+                
+                log.info("准备更新线索状态，leadId={}, leadStatus={}, assignTo={}, updateBy={}", 
+                         leadId, "1", list.get(0).getNewUserId(), updateLead.getUpdateBy());
+                         
+                int result = mkLeadMapper.updateMkLead(updateLead);
+                log.info("更新线索状态结果: {}", result);
             }
         }
     }
