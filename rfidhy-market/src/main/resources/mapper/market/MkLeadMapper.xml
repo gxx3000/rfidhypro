@@ -57,6 +57,10 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="description != null  and description != ''"> and description = #{description}</if>
             <if test="delFlag != null and delFlag != ''"> and del_flag = #{delFlag}</if>
             <if test="delFlag == null or delFlag == ''"> and del_flag = '0'</if>
+            <if test="createTimeStart != null and createTimeStart != ''"> and create_time &gt;= #{createTimeStart}</if>
+            <if test="createTimeEnd != null and createTimeEnd != ''"> and create_time &lt;= #{createTimeEnd}</if>
+            <if test="updateTimeStart != null and updateTimeStart != ''"> and update_time &gt;= #{updateTimeStart}</if>
+            <if test="updateTimeEnd != null and updateTimeEnd != ''"> and update_time &lt;= #{updateTimeEnd}</if>
         </where>
     </select>
     

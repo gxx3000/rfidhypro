@@ -2,7 +2,7 @@
   <div class="app-container">
     <el-form :model="queryParams" ref="queryRef" v-show="showSearch" label-width="68px" class="search-form">
       <el-row :gutter="20">
-        <el-col :span="8">
+        <el-col :span="4">
           <el-form-item label="联系人" prop="leadName">
             <el-input
               v-model="queryParams.leadName"
@@ -12,7 +12,7 @@
             />
           </el-form-item>
         </el-col>
-        <el-col :span="8">
+        <el-col :span="4">
           <el-form-item label="联系电话" prop="phone">
             <el-input
               v-model="queryParams.phone"
@@ -22,7 +22,17 @@
             />
           </el-form-item>
         </el-col>
-        <el-col :span="8">
+        <el-col :span="5">
+          <el-form-item label="电子邮箱" prop="email">
+            <el-input
+              v-model="queryParams.email"
+              placeholder="请输入电子邮箱"
+              clearable
+              @keyup.enter="handleQuery"
+            />
+          </el-form-item>
+        </el-col>
+        <el-col :span="4">
           <el-form-item label="线索来源" prop="sourceId">
             <el-select v-model="queryParams.sourceId" placeholder="请选择线索来源" clearable>
               <el-option
@@ -34,11 +44,9 @@
             </el-select>
           </el-form-item>
         </el-col>
-      </el-row>
-      <el-row :gutter="20">
-        <el-col :span="8">
+        <el-col :span="4">
           <el-form-item label="线索状态" prop="leadStatus">
-            <el-select v-model="queryParams.leadStatus" placeholder="请选择线索状态" clearable>
+            <el-select v-model="queryParams.leadStatus" placeholder="选择线索状态" clearable>
               <el-option
                 v-for="dict in mk_assign_type"
                 :key="dict.value"
@@ -48,9 +56,9 @@
             </el-select>
           </el-form-item>
         </el-col>
-        <el-col :span="8">
+        <el-col :span="3">
           <el-form-item label="线索等级" prop="level">
-            <el-select v-model="queryParams.level" placeholder="请选择线索等级" clearable>
+            <el-select v-model="queryParams.level" placeholder="选择线索等级" clearable>
               <el-option
                 v-for="dict in mk_lead_level"
                 :key="dict.value"
@@ -60,7 +68,9 @@
             </el-select>
           </el-form-item>
         </el-col>
-        <el-col :span="8">
+      </el-row>
+      <el-row :gutter="20">
+        <el-col :span="4">
           <el-form-item label="负责人" prop="assignTo">
             <el-select v-model="queryParams.assignTo" placeholder="请选择负责人" clearable filterable>
               <el-option
@@ -72,9 +82,31 @@
             </el-select>
           </el-form-item>
         </el-col>
-      </el-row>
-      <el-row :gutter="20">
-        <el-col :span="24" class="search-buttons">
+        <el-col :span="6">
+          <el-form-item label="创建时间" prop="createTime">
+            <el-date-picker
+              v-model="queryParams.createTime"
+              type="daterange"
+              value-format="YYYY-MM-DD"
+              start-placeholder="开始日期"
+              end-placeholder="结束日期"
+              :default-time="[new Date(2000, 1, 1, 0, 0, 0), new Date(2000, 1, 1, 23, 59, 59)]">
+            </el-date-picker>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="更新时间" prop="updateTime">
+            <el-date-picker
+              v-model="queryParams.updateTime"
+              type="daterange"
+              value-format="YYYY-MM-DD"
+              start-placeholder="开始日期"
+              end-placeholder="结束日期"
+              :default-time="[new Date(2000, 1, 1, 0, 0, 0), new Date(2000, 1, 1, 23, 59, 59)]">
+            </el-date-picker>
+          </el-form-item>
+        </el-col>
+        <el-col :span="8" class="search-buttons">
           <el-button type="primary" icon="Search" @click="handleQuery">搜索</el-button>
           <el-button icon="Refresh" @click="resetQuery">重置</el-button>
         </el-col>
@@ -136,7 +168,7 @@
       <el-table-column type="selection" width="55" align="center" />
       <!-- 移除线索ID列 -->
       <el-table-column label="联系人" align="center" prop="leadName" />
-      <el-table-column label="联系电话" align="center" prop="phone" />
+      <el-table-column label="联系电话" align="center" prop="phone" width="120" />
       <el-table-column label="线索来源" align="center" prop="sourceId">
         <template #default="scope">
           {{ getSourceName(scope.row.sourceId) }}
@@ -161,6 +193,18 @@
       <el-table-column label="创建者" align="center">
         <template #default="scope">
           {{ getUserName(scope.row.createBy) }}
+        </template>
+      </el-table-column>
+      
+      <el-table-column label="创建时间" align="center" prop="createTime" width="160">
+        <template #default="scope">
+          {{ parseTime(scope.row.createTime, '{y}-{m}-{d}') }}
+        </template>
+      </el-table-column>
+      
+      <el-table-column label="更新时间" align="center" prop="updateTime" width="160">
+        <template #default="scope">
+          {{ parseTime(scope.row.updateTime, '{y}-{m}-{d}') }}
         </template>
       </el-table-column>
       
@@ -395,7 +439,9 @@ const data = reactive({
     delFlag: '0', // 默认只显示未删除的数据
     del_flag: '0', // 兼容后端可能使用的下划线命名
     orderByColumn: 'createTime',
-    isAsc: 'desc'
+    isAsc: 'desc',
+    createTime: null,
+    updateTime: null
   },
   rules: {
     leadName: [
@@ -560,6 +606,20 @@ function getList() {
   loading.value = true
   // 创建查询参数的副本，并处理线索状态值
   const queryData = { ...queryParams.value }
+  
+  // 处理创建时间范围查询参数
+  if (queryData.createTime && Array.isArray(queryData.createTime)) {
+    queryData.createTimeStart = queryData.createTime[0];
+    queryData.createTimeEnd = queryData.createTime[1];
+    delete queryData.createTime;
+  }
+  
+  // 处理更新时间范围查询参数
+  if (queryData.updateTime && Array.isArray(queryData.updateTime)) {
+    queryData.updateTimeStart = queryData.updateTime[0];
+    queryData.updateTimeEnd = queryData.updateTime[1];
+    delete queryData.updateTime;
+  }
   
   // 确保线索状态值是字符串类型，与后端存储保持一致
   if (queryData.leadStatus !== null && queryData.leadStatus !== undefined) {

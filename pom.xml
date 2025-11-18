@@ -199,6 +199,13 @@
                 <version>${rfidhy.version}</version>
             </dependency>
 
+            <!-- 已分线索-->
+            <dependency>
+                <groupId>com.rfidhy</groupId>
+                <artifactId>rfidhy-customer</artifactId>
+                <version>${rfidhy.version}</version>
+            </dependency>
+
         </dependencies>
     </dependencyManagement>
 
@@ -211,6 +218,7 @@
         <module>rfidhy-common</module>
         <module>rfidhy-base</module>
         <module>rfidhy-market</module>
+        <module>rfidhy-customer</module>
     </modules>
     <packaging>pom</packaging>
 

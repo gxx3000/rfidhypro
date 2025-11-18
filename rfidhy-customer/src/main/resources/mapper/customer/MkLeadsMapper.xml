@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.rfidhy.customer.mapper.MkLeadsMapper">
+    
+    <resultMap type="MkLeads" id="MkLeadsResult">
+        <result property="leadId"    column="lead_id"    />
+        <result property="leadName"    column="lead_name"    />
+        <result property="phone"    column="phone"    />
+        <result property="email"    column="email"    />
+        <result property="sourceId"    column="source_id"    />
+        <result property="sourceName"    column="source_name"    />
+        <result property="leadStatus"    column="lead_status"    />
+        <result property="assignTo"    column="assign_to"    />
+        <result property="level"    column="level"    />
+        <result property="address"    column="address"    />
+        <result property="description"    column="description"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+        <result property="remark"    column="remark"    />
+        <result property="delFlag"    column="del_flag"    />
+    </resultMap>
+
+    <sql id="selectMkLeadsVo">
+        select ml.lead_id, ml.lead_name, ml.phone, ml.email, ml.source_id, mls.source_name, ml.lead_status, ml.assign_to, ml.level, ml.address, ml.description, ml.create_by, ml.create_time, ml.update_by, ml.update_time, ml.remark, ml.del_flag 
+        from mk_lead ml
+        left join mk_lead_source mls on ml.source_id = mls.source_id
+    </sql>
+
+    <select id="selectMkLeadsList" parameterType="MkLeads" resultMap="MkLeadsResult">
+        <include refid="selectMkLeadsVo"/>
+        <where>  
+            <if test="leadName != null  and leadName != ''"> and ml.lead_name like concat('%', #{leadName}, '%')</if>
+            <if test="phone != null  and phone != ''"> and ml.phone = #{phone}</if>
+            <if test="email != null  and email != ''"> and ml.email = #{email}</if>
+            <if test="sourceId != null "> and ml.source_id = #{sourceId}</if>
+            <if test="leadStatus != null  and leadStatus != ''"> and ml.lead_status = #{leadStatus}</if>
+            <if test="level != null  and level != ''"> and ml.level = #{level}</if>
+            <if test="updateTime != null "> and ml.update_time = #{updateTime}</if>
+            and ml.del_flag = '0'
+        </where>
+    </select>
+    
+    <select id="selectMkLeadsByLeadId" parameterType="Long" resultMap="MkLeadsResult">
+        <include refid="selectMkLeadsVo"/>
+        where ml.lead_id = #{leadId}
+    </select>
+
+    <insert id="insertMkLeads" parameterType="MkLeads" useGeneratedKeys="true" keyProperty="leadId">
+        insert into mk_lead
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="leadName != null">lead_name,</if>
+            <if test="phone != null">phone,</if>
+            <if test="email != null">email,</if>
+            <if test="sourceId != null">source_id,</if>
+            <if test="leadStatus != null">lead_status,</if>
+            <if test="assignTo != null">assign_to,</if>
+            <if test="level != null">level,</if>
+            <if test="address != null">address,</if>
+            <if test="description != null">description,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="remark != null">remark,</if>
+            <if test="delFlag != null">del_flag,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="leadName != null">#{leadName},</if>
+            <if test="phone != null">#{phone},</if>
+            <if test="email != null">#{email},</if>
+            <if test="sourceId != null">#{sourceId},</if>
+            <if test="leadStatus != null">#{leadStatus},</if>
+            <if test="assignTo != null">#{assignTo},</if>
+            <if test="level != null">#{level},</if>
+            <if test="address != null">#{address},</if>
+            <if test="description != null">#{description},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="remark != null">#{remark},</if>
+            <if test="delFlag != null">#{delFlag},</if>
+         </trim>
+    </insert>
+
+    <update id="updateMkLeads" parameterType="MkLeads">
+        update mk_lead
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="leadName != null">lead_name = #{leadName},</if>
+            <if test="phone != null">phone = #{phone},</if>
+            <if test="email != null">email = #{email},</if>
+            <if test="sourceId != null">source_id = #{sourceId},</if>
+            <if test="leadStatus != null">lead_status = #{leadStatus},</if>
+            <if test="assignTo != null">assign_to = #{assignTo},</if>
+            <if test="level != null">level = #{level},</if>
+            <if test="address != null">address = #{address},</if>
+            <if test="description != null">description = #{description},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            <if test="delFlag != null">del_flag = #{delFlag},</if>
+        </trim>
+        where lead_id = #{leadId}
+    </update>
+
+    <delete id="deleteMkLeadsByLeadId" parameterType="Long">
+        delete from mk_lead where lead_id = #{leadId}
+    </delete>
+
+    <delete id="deleteMkLeadsByLeadIds" parameterType="String">
+        delete from mk_lead where lead_id in 
+        <foreach item="leadId" collection="array" open="(" separator="," close=")">
+            #{leadId}
+        </foreach>
+    </delete>
+</mapper>

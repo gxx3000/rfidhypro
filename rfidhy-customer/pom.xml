@@ -8,9 +8,10 @@
         <artifactId>rfidhy</artifactId>
         <version>0.0.1</version>
     </parent>
-    <artifactId>rfidhy-market</artifactId>
+
+    <artifactId>rfidhy-customer</artifactId>
     <description>
-        线索表
+        已分线索
     </description>
 
     <dependencies>
