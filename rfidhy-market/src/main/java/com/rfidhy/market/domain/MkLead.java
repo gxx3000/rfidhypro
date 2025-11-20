@@ -58,6 +58,19 @@ public class MkLead extends BaseEntity
     /** 删除标志 */
     private String delFlag;
 
+    // 添加开始时间和结束时间字段用于查询条件
+    /** 创建时间开始 */
+    private String createTimeStart;
+    
+    /** 创建时间结束 */
+    private String createTimeEnd;
+    
+    /** 更新时间开始 */
+    private String updateTimeStart;
+    
+    /** 更新时间结束 */
+    private String updateTimeEnd;
+
     /** 线索分配信息 */
     private List<MkLeadAssign> mkLeadAssignList;
 
@@ -169,6 +182,38 @@ public class MkLead extends BaseEntity
     public String getDelFlag() 
     {
         return delFlag;
+    }
+
+    public String getCreateTimeStart() {
+        return createTimeStart;
+    }
+
+    public void setCreateTimeStart(String createTimeStart) {
+        this.createTimeStart = createTimeStart;
+    }
+
+    public String getCreateTimeEnd() {
+        return createTimeEnd;
+    }
+
+    public void setCreateTimeEnd(String createTimeEnd) {
+        this.createTimeEnd = createTimeEnd;
+    }
+
+    public String getUpdateTimeStart() {
+        return updateTimeStart;
+    }
+
+    public void setUpdateTimeStart(String updateTimeStart) {
+        this.updateTimeStart = updateTimeStart;
+    }
+
+    public String getUpdateTimeEnd() {
+        return updateTimeEnd;
+    }
+
+    public void setUpdateTimeEnd(String updateTimeEnd) {
+        this.updateTimeEnd = updateTimeEnd;
     }
 
     public List<MkLeadAssign> getMkLeadAssignList()

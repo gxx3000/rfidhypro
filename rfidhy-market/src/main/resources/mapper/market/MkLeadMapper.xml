@@ -41,26 +41,31 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
     </resultMap>
 
     <sql id="selectMkLeadVo">
-        select lead_id, lead_name, phone, email, source_id, lead_status, assign_to, level, address, description, create_by, create_time, update_by, update_time, remark, del_flag from mk_lead
+        select ml.lead_id, ml.lead_name, ml.phone, ml.email, ml.source_id, ml.lead_status, ml.assign_to, ml.level, ml.address, ml.description, ml.create_by, ml.create_time, ml.update_by, ml.update_time, ml.remark, ml.del_flag from mk_lead ml
     </sql>
 
     <select id="selectMkLeadList" parameterType="MkLead" resultMap="MkLeadResult">
         <include refid="selectMkLeadVo"/>
         <where>  
-            <if test="leadName != null  and leadName != ''"> and lead_name like concat('%', #{leadName}, '%')</if>
-            <if test="phone != null  and phone != ''"> and phone = #{phone}</if>
-            <if test="email != null  and email != ''"> and email = #{email}</if>
-            <if test="sourceId != null "> and source_id = #{sourceId}</if>
-            <if test="leadStatus != null  and leadStatus != ''"> and lead_status = #{leadStatus}</if>
-            <if test="assignTo != null "> and assign_to = #{assignTo}</if>
-            <if test="level != null  and level != ''"> and level = #{level}</if>
-            <if test="description != null  and description != ''"> and description = #{description}</if>
-            <if test="delFlag != null and delFlag != ''"> and del_flag = #{delFlag}</if>
-            <if test="delFlag == null or delFlag == ''"> and del_flag = '0'</if>
-            <if test="createTimeStart != null and createTimeStart != ''"> and create_time &gt;= #{createTimeStart}</if>
-            <if test="createTimeEnd != null and createTimeEnd != ''"> and create_time &lt;= #{createTimeEnd}</if>
-            <if test="updateTimeStart != null and updateTimeStart != ''"> and update_time &gt;= #{updateTimeStart}</if>
-            <if test="updateTimeEnd != null and updateTimeEnd != ''"> and update_time &lt;= #{updateTimeEnd}</if>
+            <if test="leadName != null  and leadName != ''"> and ml.lead_name like concat('%', #{leadName}, '%')</if>
+            <if test="phone != null  and phone != ''"> and ml.phone like concat('%', #{phone}, '%')</if>
+            <if test="email != null  and email != ''"> and ml.email = #{email}</if>
+            <if test="sourceId != null "> and ml.source_id = #{sourceId}</if>
+            <if test="leadStatus != null  and leadStatus != ''"> and ml.lead_status = #{leadStatus}</if>
+            <if test="assignTo != null "> and ml.assign_to = #{assignTo}</if>
+            <if test="level != null  and level != ''"> and ml.level = #{level}</if>
+            <if test="description != null  and description != ''"> and ml.description = #{description}</if>
+            <if test="delFlag != null and delFlag != ''"> and ml.del_flag = #{delFlag}</if>
+            <if test="delFlag == null or delFlag == ''"> and ml.del_flag = '0'</if>
+            <if test="createTimeStart != null and createTimeStart != ''"> and ml.create_time &gt;= #{createTimeStart}</if>
+            <if test="createTimeEnd != null and createTimeEnd != ''"> and ml.create_time &lt;= #{createTimeEnd}</if>
+            <if test="updateTimeStart != null and updateTimeStart != ''"> and ml.update_time &gt;= #{updateTimeStart}</if>
+            <if test="updateTimeEnd != null and updateTimeEnd != ''"> and ml.update_time &lt;= #{updateTimeEnd}</if>
+            <!-- 处理数据权限过滤，将user_id映射到create_by -->
+            <if test="params.dataScope != null and params.dataScope != ''">
+                <bind name="dataScopeSql" value="params.dataScope.replace('user_id', 'create_by')" />
+                ${dataScopeSql}
+            </if>
         </where>
     </select>
     

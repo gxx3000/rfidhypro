@@ -1,72 +1,92 @@
 <template>
   <div class="app-container">
-    <el-form :model="queryParams" ref="queryRef" :inline="true" v-show="showSearch" label-width="68px">
-      <el-form-item label="联系人" prop="leadName">
-        <el-input
-          v-model="queryParams.leadName"
-          placeholder="请输入联系人"
-          clearable
-          @keyup.enter="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="联系电话" prop="phone">
-        <el-input
-          v-model="queryParams.phone"
-          placeholder="请输入联系电话"
-          clearable
-          @keyup.enter="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="电子邮箱" prop="email">
-        <el-input
-          v-model="queryParams.email"
-          placeholder="请输入电子邮箱"
-          clearable
-          @keyup.enter="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="线索来源" prop="sourceId">
-        <el-select v-model="queryParams.sourceId" placeholder="请选择线索来源" clearable>
-          <el-option
-            v-for="item in sourceList"
-            :key="item.value"
-            :label="item.label"
-            :value="item.value">
-          </el-option>
-        </el-select>
-      </el-form-item>
-      <el-form-item label="线索状态" prop="leadStatus">
-        <el-select v-model="queryParams.leadStatus" placeholder="请选择线索状态" clearable>
-          <el-option
-            v-for="dict in mk_assign_type"
-            :key="dict.value"
-            :label="dict.label"
-            :value="dict.value"
-          />
-        </el-select>
-      </el-form-item>
-      <el-form-item label="线索等级" prop="level">
-        <el-select v-model="queryParams.level" placeholder="请选择线索等级" clearable>
-          <el-option
-            v-for="dict in mk_lead_level"
-            :key="dict.value"
-            :label="dict.label"
-            :value="dict.value"
-          />
-        </el-select>
-      </el-form-item>
-      <el-form-item label="更新时间" prop="updateTime">
-        <el-date-picker clearable
-          v-model="queryParams.updateTime"
-          type="date"
-          value-format="YYYY-MM-DD"
-          placeholder="请选择更新时间">
-        </el-date-picker>
-      </el-form-item>
-      <el-form-item>
-        <el-button type="primary" icon="Search" @click="handleQuery">搜索</el-button>
-        <el-button icon="Refresh" @click="resetQuery">重置</el-button>
-      </el-form-item>
+    <el-form :model="queryParams" ref="queryRef" v-show="showSearch" label-width="68px" class="search-form">
+      <el-row :gutter="20">
+        <el-col :span="4">
+          <el-form-item label="联系人" prop="leadName">
+            <el-input
+              v-model="queryParams.leadName"
+              placeholder="请输入联系人"
+              clearable
+              @keyup.enter="handleQuery"
+            />
+          </el-form-item>
+        </el-col>
+        <el-col :span="4">
+          <el-form-item label="联系电话" prop="phone">
+            <el-input
+              v-model="queryParams.phone"
+              placeholder="请输入联系电话"
+              clearable
+              @keyup.enter="handleQuery"
+            />
+          </el-form-item>
+        </el-col>
+        <el-col :span="5">
+          <el-form-item label="电子邮箱" prop="email">
+            <el-input
+              v-model="queryParams.email"
+              placeholder="请输入电子邮箱"
+              clearable
+              @keyup.enter="handleQuery"
+            />
+          </el-form-item>
+        </el-col>
+        <el-col :span="4">
+          <el-form-item label="线索来源" prop="sourceId">
+            <el-select v-model="queryParams.sourceId" placeholder="请选择线索来源" clearable>
+              <el-option
+                v-for="item in sourceList"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value">
+              </el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="4">
+          <el-form-item label="线索状态" prop="leadStatus">
+            <el-select v-model="queryParams.leadStatus" placeholder="请选择线索状态" clearable>
+              <el-option
+                v-for="dict in mk_assign_type"
+                :key="dict.value"
+                :label="dict.label"
+                :value="dict.value">
+              </el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>        
+      </el-row>
+      <el-row :gutter="20">        
+        <el-col :span="5">
+          <el-form-item label="线索等级" prop="level">
+            <el-select v-model="queryParams.level" placeholder="请选择线索等级" clearable>
+              <el-option
+                v-for="dict in mk_lead_level"
+                :key="dict.value"
+                :label="dict.label"
+                :value="dict.value">
+              </el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="6">
+          <el-form-item label="更新时间" prop="updateTime">
+            <el-date-picker
+              v-model="queryParams.updateTime"
+              type="daterange"
+              value-format="YYYY-MM-DD"
+              start-placeholder="开始日期"
+              end-placeholder="结束日期"
+              :default-time="[new Date(2000, 1, 1, 0, 0, 0), new Date(2000, 1, 1, 23, 59, 59)]">
+            </el-date-picker>
+          </el-form-item>
+        </el-col>
+        <el-col :span="13" class="search-buttons">
+          <el-button type="primary" icon="Search" @click="handleQuery">搜索</el-button>
+          <el-button icon="Refresh" @click="resetQuery">重置</el-button>
+        </el-col>
+      </el-row>
     </el-form>
 
     <el-row :gutter="10" class="mb8">
@@ -115,7 +135,7 @@
       <el-table-column type="selection" width="55" align="center" />
       <!-- <el-table-column label="线索ID" align="center" prop="leadId" /> -->
       <el-table-column label="联系人" align="center" prop="leadName" />
-      <el-table-column label="联系电话" align="center" prop="phone" />
+      <el-table-column label="联系电话" align="center" prop="phone" width="120" />
       <el-table-column label="线索来源" align="center" prop="sourceName" />
       <el-table-column label="线索状态" align="center" prop="leadStatus">
         <template #default="scope">
@@ -125,6 +145,11 @@
       <el-table-column label="线索等级" align="center" prop="level">
         <template #default="scope">
           <dict-tag :options="mk_lead_level" :value="scope.row.level"/>
+        </template>
+      </el-table-column>
+      <el-table-column label="更新时间" align="center" prop="updateTime" width="160">
+        <template #default="scope">
+          {{ parseTime(scope.row.updateTime, '{y}-{m}-{d}') }}
         </template>
       </el-table-column>
       <el-table-column label="操作" align="center" class-name="small-padding fixed-width">

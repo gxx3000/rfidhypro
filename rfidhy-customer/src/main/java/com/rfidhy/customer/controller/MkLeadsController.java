@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import com.rfidhy.common.annotation.Log;
+import com.rfidhy.common.annotation.DataScope;
 import com.rfidhy.common.core.controller.BaseController;
 import com.rfidhy.common.core.domain.AjaxResult;
 import com.rfidhy.common.enums.BusinessType;
@@ -38,6 +39,7 @@ public class MkLeadsController extends BaseController
      * 查询已分线索列表
      */
     @PreAuthorize("@ss.hasPermi('customer:leads:list')")
+    @DataScope(userAlias = "ml")
     @GetMapping("/list")
     public TableDataInfo list(MkLeads mkLeads)
     {
@@ -51,6 +53,7 @@ public class MkLeadsController extends BaseController
      */
     @PreAuthorize("@ss.hasPermi('customer:leads:export')")
     @Log(title = "已分线索", businessType = BusinessType.EXPORT)
+    @DataScope(userAlias = "ml")
     @PostMapping("/export")
     public void export(HttpServletResponse response, MkLeads mkLeads)
     {

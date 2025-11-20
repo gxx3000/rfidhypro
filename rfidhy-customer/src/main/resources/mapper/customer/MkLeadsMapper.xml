@@ -41,6 +41,11 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
             <if test="level != null  and level != ''"> and ml.level = #{level}</if>
             <if test="updateTime != null "> and ml.update_time = #{updateTime}</if>
             and ml.del_flag = '0'
+            <!-- 处理数据权限过滤，将user_id映射到assign_to -->
+            <if test="params.dataScope != null and params.dataScope != ''">
+                <bind name="dataScopeSql" value="params.dataScope.replace('user_id', 'assign_to')" />
+                ${dataScopeSql}
+            </if>
         </where>
     </select>
     
